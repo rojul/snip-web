@@ -1,6 +1,6 @@
 <template>
   <div class="root">
-    <Toolbar></Toolbar>
+    <Toolbar class="grid-toolbar" :title="title"></Toolbar>
     <div class="grid-error" v-if="errorMsg">{{ errorMsg }}</div>
     <Tabs class="grid-tabs" v-model="selectedTab">
       <template v-if="!state">
@@ -80,6 +80,12 @@ export default {
         return [];
       }
       return [space, { text: this.snippet.language.name }];
+    },
+    title() {
+      if (!this.snippet) {
+        return undefined;
+      }
+      return `${this.snippet.language.name} Snippet`;
     },
   },
   methods: {

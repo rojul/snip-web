@@ -8,8 +8,24 @@
 <script>
 export default {
   name: 'toolbar',
+  props: {
+    title: String,
+  },
   data() {
     return {};
+  },
+  methods: {
+    updateTitle() {
+      document.title = `${this.title ? `${this.title} - ` : ''}Snip`;
+    },
+  },
+  created() {
+    this.updateTitle();
+  },
+  watch: {
+    title() {
+      this.updateTitle();
+    },
   },
 };
 </script>

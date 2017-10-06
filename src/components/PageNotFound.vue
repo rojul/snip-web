@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Toolbar></Toolbar>
+    <Toolbar title="Page Not Found"></Toolbar>
     <div class="content">Page Not Found</div>
   </div>
 </template>
