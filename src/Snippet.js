@@ -106,8 +106,8 @@ export default class Snippet {
   async run() {
     return Api.runSnippet(this.getRep()).catch((err) => {
       let error = 'Can\'t run snippet';
-      if (err.statusText) {
-        error += `: ${err.statusText}`;
+      if (err.errorMsg) {
+        error += `: ${err.errorMsg}`;
       }
       console.log(`${error}:`, err);
       return { error };

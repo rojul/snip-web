@@ -73,11 +73,14 @@ export default {
         this.rawLanguages = res.languages;
       }).catch((err) => {
         this.state = 'error';
-        this.handleError('Can\'t load languages', err);
+        this.handleError(err, 'Can\'t load languages');
       });
     },
-    handleError(msg, err) {
+    handleError(err, msg) {
       this.errorMsg = msg;
+      if (err.errorMsg) {
+        this.errorMsg += `: ${err.errorMsg}`;
+      }
       console.log(`${this.errorMsg}:`, err);
     },
   },

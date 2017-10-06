@@ -1,7 +1,8 @@
 <template>
   <div class="root">
     <Toolbar></Toolbar>
-    <Tabs v-model="selectedTab">
+    <div class="grid-error" v-if="errorMsg">{{ errorMsg }}</div>
+    <Tabs class="grid-tabs" v-model="selectedTab">
       <template v-if="!state">
         <Tab
           v-for="f in snippet.files"
@@ -39,7 +40,7 @@
         </Tab>
       </template>
     </Tabs>
-    <Statusbar :status="status"></Statusbar>
+    <Statusbar class="grid-statusbar" :status="status"></Statusbar>
   </div>
 </template>
 
@@ -87,7 +88,7 @@ export default {
       this.snippet.save().then(() => {
         this.$router.push({ name: 'SnippetRun', params: { id: this.snippet.id } });
       }).catch((err) => {
-        this.handleError('Can\'t save snippet', err);
+        this.handleError(err, 'Can\'t save snippet');
       });
     },
     cloneSnippet() {
@@ -129,8 +130,11 @@ export default {
         this.output = output;
       });
     },
-    handleError(msg, err) {
+    handleError(err, msg) {
       this.errorMsg = msg;
+      if (err.errorMsg) {
+        this.errorMsg += `: ${err.errorMsg}`;
+      }
       console.log(`${this.errorMsg}:`, err);
     },
   },
@@ -148,7 +152,8 @@ export default {
       this.snippet = s;
     }).catch((err) => {
       this.state = 'error';
-      this.handleError('Can\'t load snippet', err);
+      const type = this.$route.name === 'SnippetRun' ? 'snippet' : 'language';
+      this.handleError(err, `Can't load ${type}`);
     });
   },
 };
@@ -159,6 +164,7 @@ export default {
   display: grid;
   height: 100%;
   grid-template: "toolbar  " auto
+                 "error    " auto
                  "tabs     " 1fr
                  "statusbar" auto
                  / 100%;
@@ -166,5 +172,27 @@ export default {
 
 .config {
   padding: 1rem;
+}
+
+.grid-toolbar {
+  grid-area: toolbar;
+}
+
+.grid-tabs {
+  grid-area: tabs;
+}
+
+.grid-statusbar {
+  grid-area: statusbar;
+}
+
+.grid-error {
+  grid-area: error;
+  height: 3.5rem;
+  background: #f44336;
+  color: #fff;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
 }
 </style>

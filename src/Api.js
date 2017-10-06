@@ -22,11 +22,15 @@ export default class Api {
   }
 
   static async _fetchJSON(...params) {
-    const response = await fetch(...params);
+    const response = await fetch(...params)
+      .catch(err => this._throwWithMsg(err, 'Network Error'));
     if (!response.ok) {
-      throw response;
+      this._throwWithMsg(...await response.json()
+        .then(data => [data, data.error || response.statusText])
+        .catch(() => [response, response.statusText]));
     }
-    return response.json();
+    return response.json()
+      .catch(err => this._throwWithMsg(err, 'Invalid Response'));
   }
 
   static async _getJSON(url) {
@@ -38,5 +42,11 @@ export default class Api {
       method: 'POST',
       body: JSON.stringify(obj),
     });
+  }
+
+  static _throwWithMsg(err, msg) {
+    /* eslint-disable no-param-reassign */
+    err.errorMsg = msg;
+    throw err;
   }
 }
