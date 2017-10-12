@@ -25,18 +25,11 @@
         <Tab type="button" id="clone" name="Clone" @click="cloneSnippet" v-if="$route.name === 'SnippetRun'"></Tab>
         <Tab type="button" id="save" name="Save" @click="createSnippet" v-else></Tab>
         <Tab type="button" id="config" name="⚙">
-          <div class="config">
-            <div>Command:</div>
-            <div>
-              <input v-model="snippet.command"></input>
-              <button
-                @click="snippet.command = snippet.language.command"
-                :disabled="snippet.command === snippet.language.command"
-              >×</button>
-            </div>
-            <pre>{{ snippet }}</pre>
-            <pre>{{ snippet.getRep() }}</pre>
-          </div>
+          <Config
+            v-if="selectedTab === 'config'"
+            :snippet="snippet"
+            @commandInput="snippet.command = $event"
+          ></Config>
         </Tab>
       </template>
     </Tabs>
@@ -45,6 +38,7 @@
 </template>
 
 <script>
+import Config from '@/components/Config';
 import RunOutput from '@/components/RunOutput';
 import Statusbar from '@/components/Statusbar';
 import Tab from '@/components/Tab';
@@ -55,6 +49,7 @@ import Snippet from '@/Snippet';
 export default {
   name: 'run',
   components: {
+    Config,
     RunOutput,
     Statusbar,
     Tab,
@@ -174,10 +169,6 @@ export default {
                  "tabs     " 1fr
                  "statusbar" auto
                  / 100%;
-}
-
-.config {
-  padding: 1rem;
 }
 
 .grid-toolbar {
