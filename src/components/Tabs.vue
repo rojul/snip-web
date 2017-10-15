@@ -25,7 +25,12 @@
       </div>
     </div>
     <div class="content">
-      <slot></slot>
+      <div :style="{ height: `${splitVal}%` }">
+        <slot></slot>
+      </div>
+      <div :style="{ height: `${100 - splitVal}%` }" v-show="splitVal !== 100">
+        <slot name="bottom"></slot>
+      </div>
     </div>
   </div>
 </template>
@@ -41,6 +46,7 @@ export default {
   data() {
     return {
       tabs: this.$children,
+      split: 70,
     };
   },
   methods: {
@@ -50,6 +56,15 @@ export default {
         return;
       }
       this.$emit('input', tab.id);
+    },
+  },
+  computed: {
+    splitVal() {
+      const tab = this.tabs.find(t => t.id === this.value);
+      if (!tab) {
+        return undefined;
+      }
+      return tab.fullheight ? 100 : this.split;
     },
   },
   watch: {
@@ -64,7 +79,7 @@ export default {
     },
     value() {
       this.tabs.forEach((t) => {
-        t.setActive(t.id === this.value);
+        t.setActive(t.id === this.value || t.isBottom());
       });
     },
   },
@@ -109,6 +124,7 @@ export default {
   align-items: center;
   white-space: pre;
   transition: background .2s, color .2s;
+  cursor: pointer;
 }
 
 .tabs > *.active {
@@ -125,6 +141,9 @@ export default {
 
 .content {
   flex: 1;
+}
+
+.content > div {
   overflow: auto;
 }
 </style>

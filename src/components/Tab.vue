@@ -18,6 +18,10 @@ export default {
       type: String,
       required: true,
     },
+    fullheight: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -30,6 +34,9 @@ export default {
     },
     isRight() {
       return this.type === 'right';
+    },
+    isBottom() {
+      return this.type === 'bottom';
     },
     isButton() {
       return this.type === 'button';

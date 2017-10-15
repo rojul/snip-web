@@ -15,7 +15,7 @@
         <Tab type="right" name="Input" id="stdin">
           <TextareaEditor v-model="snippet.stdin"></TextareaEditor>
         </Tab>
-        <Tab type="right" name="Output" id="output">
+        <Tab type="bottom" name="Output" id="output" slot="bottom">
           <RunOutput :output="output"></RunOutput>
         </Tab>
         <Tab type="button" id="create" name="+" @click="createFile"></Tab>
@@ -24,7 +24,7 @@
         <Tab type="button" id="run" name="Run" @click="run"></Tab>
         <Tab type="button" id="clone" name="Clone" @click="cloneSnippet" v-if="$route.name === 'SnippetRun'"></Tab>
         <Tab type="button" id="save" name="Save" @click="createSnippet" v-else></Tab>
-        <Tab type="button" id="config" name="⚙">
+        <Tab type="button" id="config" name="⚙" fullheight>
           <Config
             v-if="selectedTab === 'config'"
             :snippet="snippet"
@@ -125,7 +125,6 @@ export default {
     },
     run() {
       this.errorMsg = undefined;
-      this.selectedTab = 'output';
       this.output = { info: 'Running...' };
       this.snippet.run().then((output) => {
         this.output = output;
