@@ -24,13 +24,29 @@
         >{{ t.name }}</div>
       </div>
     </div>
-    <div class="content">
+    <div
+      class="content"
+      :class="{ dragging: dragging }"
+      ref="content"
+      @mousemove="dragMove"
+      @mouseup="dragEnd"
+      @mouseleave="dragEnd"
+    >
       <div :style="{ height: `${splitVal}%` }">
         <slot></slot>
       </div>
-      <div :style="{ height: `${100 - splitVal}%` }" v-show="splitVal !== 100">
+      <div
+        :style="{ height: `${100 - splitVal}%` }"
+        v-show="splitVal !== 100"
+      >
         <slot name="bottom"></slot>
       </div>
+      <div
+        class="dragger"
+        @mousedown.prevent="dragStart"
+        :style="{ top: `calc(${splitVal}% - 4.5px)` }"
+        v-show="splitVal !== 100 && splitVal"
+      ></div>
     </div>
   </div>
 </template>
@@ -47,6 +63,7 @@ export default {
     return {
       tabs: this.$children,
       split: 70,
+      dragging: false,
     };
   },
   methods: {
@@ -56,6 +73,24 @@ export default {
         return;
       }
       this.$emit('input', tab.id);
+    },
+    dragStart(e) {
+      this.dragging = true;
+      this.startY = e.pageY;
+      this.startSplit = this.split;
+    },
+    dragMove(e) {
+      if (!this.dragging) {
+        return;
+      }
+      const dy = e.pageY - this.startY;
+      const totalHeight = this.$refs.content.offsetHeight;
+      let split = this.startSplit + ((dy / totalHeight) * 100);
+      split = Math.floor((split) * 1e4) / 1e4;
+      this.split = Math.min(Math.max(split, 10), 90);
+    },
+    dragEnd() {
+      this.dragging = false;
     },
   },
   computed: {
@@ -141,9 +176,23 @@ export default {
 
 .content {
   flex: 1;
+  position: relative;
 }
 
 .content > div {
   overflow: auto;
+}
+
+.dragging, .dragger {
+  cursor: row-resize;
+}
+
+.dragger {
+  background: #cfd8dc;
+  height: 9px;
+  width: 100%;
+  padding: 4px 0;
+  background-clip: content-box;
+  position: absolute;
 }
 </style>
