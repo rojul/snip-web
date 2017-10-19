@@ -23,7 +23,7 @@
         <Tab type="button" id="delete" name="×" @click="removeFile"></Tab>
         <Tab type="button" id="run" name="Run" @click="run"></Tab>
         <Tab type="button" id="clone" name="Clone" @click="cloneSnippet" v-if="$route.name === 'SnippetRun'"></Tab>
-        <Tab type="button" id="save" name="Save" @click="createSnippet" v-else></Tab>
+        <Tab type="button" id="save" name="Save" @click="saveSnippet" v-else></Tab>
         <Tab type="button" id="config" name="⚙" fullheight>
           <Config
             v-if="selectedTab === 'config'"
@@ -63,6 +63,7 @@ export default {
       selectedTab: undefined,
       state: 'loading',
       errorMsg: undefined,
+      isRunning: false,
     };
   },
   computed: {
@@ -84,7 +85,7 @@ export default {
     },
   },
   methods: {
-    createSnippet() {
+    saveSnippet() {
       this.errorMsg = undefined;
       this.snippet.save().then(() => {
         this.$router.push({ name: 'SnippetRun', params: { id: this.snippet.id } });
@@ -93,10 +94,12 @@ export default {
       });
     },
     cloneSnippet() {
+      this.errorMsg = undefined;
       this.snippet.clone();
       this.$router.push({ name: 'LanguageRun', params: { id: this.snippet.language.id } });
     },
     renameFile() {
+      this.errorMsg = undefined;
       const file = this.snippet.files.find(f => f.uid === this.selectedTab);
       if (!file) {
         return;
@@ -108,6 +111,7 @@ export default {
       }
     },
     removeFile() {
+      this.errorMsg = undefined;
       const selectedTab = this.snippet.removeFile(this.selectedTab);
       if (!selectedTab) {
         return;
@@ -115,6 +119,7 @@ export default {
       this.selectedTab = selectedTab;
     },
     createFile() {
+      this.errorMsg = undefined;
       const uid = this.snippet.createFile();
       if (!uid) {
         return;
@@ -123,11 +128,19 @@ export default {
         this.selectedTab = uid;
       });
     },
+    canRun() {
+      return !this.isRunning;
+    },
     run() {
+      if (!this.canRun()) {
+        return;
+      }
+      this.isRunning = true;
       this.errorMsg = undefined;
       this.output = { info: 'Running...' };
       this.snippet.run().then((output) => {
         this.output = output;
+        this.isRunning = false;
       });
     },
     handleError(err, msg) {
@@ -136,6 +149,19 @@ export default {
         this.errorMsg += `: ${err.errorMsg}`;
       }
       console.log(`${this.errorMsg}:`, err);
+    },
+    onKeydown(e) {
+      if (!e.ctrlKey && !e.metaKey) {
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.run();
+      }
+      if (e.key === 's') {
+        e.preventDefault();
+        this.saveSnippet();
+      }
     },
   },
   async created() {
@@ -155,6 +181,12 @@ export default {
       const type = this.$route.name === 'SnippetRun' ? 'snippet' : 'language';
       this.handleError(err, `Can't load ${type}`);
     });
+  },
+  mounted() {
+    document.addEventListener('keydown', this.onKeydown);
+  },
+  beforeDestroy() {
+    document.removeEventListener('keydown', this.onKeydown);
   },
 };
 </script>

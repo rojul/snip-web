@@ -16,6 +16,7 @@
         maxlength="1000"
         v-model="searchValue"
         @keyup.enter="onSearchEnter"
+        ref="search"
       ></input>
       <router-link
         class="button"
@@ -86,6 +87,9 @@ export default {
   },
   created() {
     this.loadLanguages();
+  },
+  mounted() {
+    this.$refs.search.focus();
   },
 };
 </script>

@@ -92,6 +92,9 @@ export default class Snippet {
   }
 
   async save() {
+    if (this.id) {
+      return Promise.reject({ errorMsg: 'Updating a snippet is currently not possible' });
+    }
     return Api.createSnippet(this.getRep()).then((snippet) => {
       this.assignSnippetProps(snippet);
     });
