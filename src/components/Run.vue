@@ -1,5 +1,5 @@
 <template>
-  <div class="root">
+  <div class="grid">
     <Toolbar class="grid-toolbar" :title="title"></Toolbar>
     <div class="grid-error" v-if="errorMsg">{{ errorMsg }}</div>
     <Tabs class="grid-tabs" v-model="selectedTab">
@@ -29,6 +29,7 @@
             v-if="selectedTab === 'config'"
             :snippet="snippet"
             @commandInput="snippet.command = $event"
+            @languageChange="changeLanguage"
           ></Config>
         </Tab>
       </template>
@@ -85,6 +86,12 @@ export default {
     },
   },
   methods: {
+    changeLanguage(l) {
+      this.snippet.language = l;
+      if (this.$route.name === 'LanguageRun') {
+        this.$router.replace({ name: 'LanguageRun', params: { id: this.snippet.language.id } });
+      }
+    },
     saveSnippet() {
       this.errorMsg = undefined;
       this.snippet.save().then(() => {
@@ -192,7 +199,7 @@ export default {
 </script>
 
 <style scoped>
-.root {
+.grid {
   display: grid;
   height: 100%;
   grid-template: "toolbar  " auto
