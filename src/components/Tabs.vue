@@ -39,6 +39,7 @@
         <slot></slot>
       </div>
       <div
+        class="bottom"
         :style="{ height: `${100 - splitVal}%` }"
         v-show="splitVal !== 100"
       >
@@ -187,6 +188,8 @@ export default {
 
 .content > div {
   overflow: auto;
+  position: absolute;
+  width: 100%;
 }
 
 .dragging, .dragger {
@@ -196,9 +199,11 @@ export default {
 .dragger {
   background: #cfd8dc;
   height: 12px;
-  width: 100%;
   padding: 5.5px 0;
   background-clip: content-box;
-  position: absolute;
+}
+
+.bottom {
+  bottom: 0;
 }
 </style>
