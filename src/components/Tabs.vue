@@ -31,6 +31,9 @@
       @mousemove="dragMove"
       @mouseup="dragEnd"
       @mouseleave="dragEnd"
+      @touchmove="dragMove"
+      @touchend="dragEnd"
+      @touchcancel="dragEnd"
     >
       <div :style="{ height: `${splitVal}%` }">
         <slot></slot>
@@ -44,7 +47,8 @@
       <div
         class="dragger"
         @mousedown.prevent="dragStart"
-        :style="{ top: `calc(${splitVal}% - 4.5px)` }"
+        @touchstart.prevent="dragStart"
+        :style="{ top: `calc(${splitVal}% - 6px)` }"
         v-show="splitVal !== 100 && splitVal"
       ></div>
     </div>
@@ -75,15 +79,17 @@ export default {
       this.$emit('input', tab.id);
     },
     dragStart(e) {
+      e.preventDefault();
       this.dragging = true;
-      this.startY = e.pageY;
+      this.startY = e.pageY || e.touches[0].pageY;
       this.startSplit = this.split;
     },
     dragMove(e) {
       if (!this.dragging) {
         return;
       }
-      const dy = e.pageY - this.startY;
+      e.preventDefault();
+      const dy = (e.pageY || e.touches[0].pageY) - this.startY;
       const totalHeight = this.$refs.content.offsetHeight;
       let split = this.startSplit + ((dy / totalHeight) * 100);
       split = Math.floor((split) * 1e4) / 1e4;
@@ -189,9 +195,9 @@ export default {
 
 .dragger {
   background: #cfd8dc;
-  height: 9px;
+  height: 12px;
   width: 100%;
-  padding: 4px 0;
+  padding: 5.5px 0;
   background-clip: content-box;
   position: absolute;
 }
