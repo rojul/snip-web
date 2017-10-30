@@ -18,11 +18,13 @@
       ></input>
       <router-link
         class="button"
+        tabindex="0"
         v-for="l in languages"
         :key="l.id"
         :to="$listeners.click ? '' : `/languages/${l.id}`"
         :tag="$listeners.click ? 'div' : 'a'"
-        @click.native="$emit('click', l.id)"
+        @click.native="onLanguagesClick(l)"
+        @keyup.enter.native="onLanguagesClick(l)"
       >{{ l.name }}</router-link>
       <div
         v-if="state === 'loading'"
@@ -67,6 +69,10 @@ export default {
       if (this.languages.length < 1 || this.rawLanguages.length === this.languages.length) {
         return;
       }
+      if (this.$listeners.click) {
+        this.onLanguagesClick(this.languages[0]);
+        return;
+      }
       this.$router.push(`/languages/${this.languages[0].id}`);
     },
     loadLanguages() {
@@ -87,6 +93,9 @@ export default {
         this.errorMsg += `: ${err.errorMsg}`;
       }
       console.log(`${this.errorMsg}:`, err);
+    },
+    onLanguagesClick(l) {
+      this.$emit('click', l.id);
     },
   },
   created() {
@@ -123,6 +132,7 @@ input {
   border-radius: .125rem;
   padding: 1rem;
   transition: background .2s;
+  cursor: pointer;
   
   white-space: nowrap;
   overflow: hidden;
