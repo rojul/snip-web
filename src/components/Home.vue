@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Toolbar></Toolbar>
+    <Toolbar class="nav"></Toolbar>
     <div class="main">
       <LanguageList></LanguageList>
     </div>
@@ -22,7 +22,13 @@ export default {
 </script>
 
 <style scoped>
+.nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
 .main {
-  padding: 2rem;
+  padding: calc(2rem + 3.5rem) 2rem 2rem;
 }
 </style>
