@@ -15,13 +15,13 @@
         <Tab type="right" name="Input" id="stdin">
           <TextareaEditor v-model="snippet.stdin"></TextareaEditor>
         </Tab>
-        <Tab type="bottom" name="Output" id="output" slot="bottom">
+        <Tab type="bottom" name="Output" id="output" slot="bottom" v-if="!snippet.language.notRunnable">
           <RunOutput :output="output"></RunOutput>
         </Tab>
         <Tab type="button" id="create" name="+" @click="createFile"></Tab>
         <Tab type="button" id="edit" name="✎" @click="renameFile"></Tab>
         <Tab type="button" id="delete" name="×" @click="removeFile"></Tab>
-        <Tab type="button" id="run" name="Run" @click="run"></Tab>
+        <Tab type="button" id="run" name="Run" @click="run" :show="!snippet.language.notRunnable"></Tab>
         <Tab type="button" id="clone" name="Clone" @click="cloneSnippet" v-if="$route.name === 'SnippetRun'"></Tab>
         <Tab type="button" id="save" name="Save" @click="saveSnippet" v-else></Tab>
         <Tab type="button" id="config" name="⚙" fullheight>
@@ -136,7 +136,7 @@ export default {
       });
     },
     canRun() {
-      return !this.isRunning;
+      return !this.isRunning && !this.snippet.language.notRunnable;
     },
     run() {
       if (!this.canRun()) {

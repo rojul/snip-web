@@ -1,5 +1,5 @@
 <template>
-  <div class="tab" v-show="active">
+  <div class="tab" v-show="show && active">
     <slot></slot>
   </div>
 </template>
@@ -21,6 +21,10 @@ export default {
     fullheight: {
       type: Boolean,
       default: false,
+    },
+    show: {
+      type: Boolean,
+      default: true,
     },
   },
   data() {

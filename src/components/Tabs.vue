@@ -3,14 +3,14 @@
     <div class="bar">
       <div class="tabs">
         <div
-          v-for="t in tabs.filter(t => t.isLeft())"
+          v-for="t in tabs.filter(t => t.isLeft() && t.show)"
           :key="t.id"
           :class="{ active: value === t.id }"
           @click="click(t)"
         >{{ t.name }}</div>
         <div class="space"></div>
         <div
-          v-for="t in tabs.filter(t => t.isRight())"
+          v-for="t in tabs.filter(t => t.isRight() && t.show)"
           :key="t.id"
           :class="{ active: value === t.id }"
           @click="click(t)"
@@ -18,7 +18,7 @@
       </div>
       <div class="buttons">
         <div
-          v-for="(t, i) in tabs.filter(t => t.isButton())"
+          v-for="(t, i) in tabs.filter(t => t.isButton() && t.show)"
           :key="t.id"
           @click="click(t)"
         >{{ t.name }}</div>
@@ -35,13 +35,13 @@
       @touchend="dragEnd"
       @touchcancel="dragEnd"
     >
-      <div :style="{ height: `${splitVal}%` }">
+      <div :style="{ height: `${splitVal || 100}%` }">
         <slot></slot>
       </div>
       <div
         class="bottom"
         :style="{ height: `${100 - splitVal}%` }"
-        v-show="splitVal !== 100"
+        v-show="splitVal"
       >
         <slot name="bottom"></slot>
       </div>
@@ -50,7 +50,7 @@
         @mousedown.prevent="dragStart"
         @touchstart.prevent="dragStart"
         :style="{ top: `calc(${splitVal}% - 6px)` }"
-        v-show="splitVal !== 100 && splitVal"
+        v-show="splitVal"
       ></div>
     </div>
   </div>
@@ -103,10 +103,10 @@ export default {
   computed: {
     splitVal() {
       const tab = this.tabs.find(t => t.id === this.value);
-      if (!tab) {
+      if (!tab || tab.fullheight || !this.$slots.bottom) {
         return undefined;
       }
-      return tab.fullheight ? 100 : this.split;
+      return this.split;
     },
   },
   watch: {
