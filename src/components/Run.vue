@@ -95,7 +95,7 @@ export default {
     saveSnippet() {
       this.errorMsg = undefined;
       this.snippet.save().then(() => {
-        this.$router.push({ name: 'SnippetRun', params: { id: this.snippet.id } });
+        this.$router.replace({ name: 'SnippetRun', params: { id: this.snippet.id } });
       }).catch((err) => {
         this.handleError(err, 'Can\'t save snippet');
       });
