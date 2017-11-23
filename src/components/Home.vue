@@ -1,6 +1,8 @@
 <template>
   <div>
-    <Toolbar class="nav"></Toolbar>
+    <Toolbar>
+      <router-link to="/about">About</router-link>
+    </Toolbar>
     <div class="main">
       <LanguageList></LanguageList>
     </div>
@@ -22,7 +24,7 @@ export default {
 </script>
 
 <style scoped>
-.nav {
+nav {
   position: fixed;
   top: 0;
   width: 100%;

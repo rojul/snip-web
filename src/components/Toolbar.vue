@@ -2,6 +2,7 @@
   <nav>
     <router-link to="/">Snip</router-link>
     <div class="space"></div>
+    <slot></slot>
   </nav>
 </template>
 
