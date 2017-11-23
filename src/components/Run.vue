@@ -138,17 +138,30 @@ export default {
     canRun() {
       return !this.isRunning && !this.snippet.language.notRunnable;
     },
-    run() {
+    async run() {
       if (!this.canRun()) {
         return;
       }
       this.isRunning = true;
       this.errorMsg = undefined;
-      this.output = { info: 'Running...' };
-      this.snippet.run().then((output) => {
-        this.output = output;
-        this.isRunning = false;
-      });
+      this.output = { info: 'Running...', events: [] };
+      const reader = await this.snippet.run();
+      /* eslint-disable no-await-in-loop */
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) {
+          this.output.info = undefined;
+          this.isRunning = false;
+          return;
+        }
+        if (value.type) {
+          this.output.events.push(value);
+        } else {
+          this.output.events.push(...(value.events || []));
+          this.output.error = value.error;
+          this.output.exitCode = value.exitCode;
+        }
+      }
     },
     handleError(err, msg) {
       this.errorMsg = msg;

@@ -1,3 +1,5 @@
+import ndjson from './ndjson';
+
 const apiUrl = '/api/';
 
 export default class Api {
@@ -18,27 +20,36 @@ export default class Api {
   }
 
   static async runSnippet(payload) {
-    return this._postJSON('run', payload);
+    const response = await this._fetch('run', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return ndjson(response.body).getReader();
   }
 
-  static async _fetchJSON(...params) {
-    const response = await fetch(...params)
+  static async _fetch(input, init) {
+    const response = await fetch(apiUrl + input, init)
       .catch(err => this._throwWithMsg(err, 'Network Error'));
     if (!response.ok) {
       this._throwWithMsg(...await response.json()
         .then(data => [data, data.error || response.statusText])
         .catch(() => [response, response.statusText]));
     }
+    return response;
+  }
+
+  static async _fetchJSON(input, init) {
+    const response = await this._fetch(input, init);
     return response.json()
       .catch(err => this._throwWithMsg(err, 'Invalid Response'));
   }
 
   static async _getJSON(url) {
-    return this._fetchJSON(apiUrl + url);
+    return this._fetchJSON(url, {});
   }
 
   static async _postJSON(url, obj) {
-    return this._fetchJSON(apiUrl + url, {
+    return this._fetchJSON(url, {
       method: 'POST',
       body: JSON.stringify(obj),
     });
