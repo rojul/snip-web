@@ -204,9 +204,11 @@ export default {
   },
   mounted() {
     document.addEventListener('keydown', this.onKeydown);
+    document.body.style.overflow = 'hidden';
   },
   beforeDestroy() {
     document.removeEventListener('keydown', this.onKeydown);
+    document.body.style.overflow = '';
   },
 };
 </script>
