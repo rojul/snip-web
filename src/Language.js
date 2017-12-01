@@ -8,7 +8,6 @@ export default class Language {
   static async loadLanguage(id) {
     const l = await Api.getLanguage(id);
     l.command = l.command || '';
-    l.helloWorld = l.helloWorld || '';
     return new Language(l);
   }
 }

@@ -125,11 +125,6 @@ export default class Snippet {
 
   static async loadLanguage(langName) {
     const l = await Language.loadLanguage(langName);
-    return new Snippet(l, {
-      files: [{
-        name: `main.${l.extension}`,
-        content: l.helloWorld,
-      }],
-    });
+    return new Snippet(l, l.helloWorld);
   }
 }
