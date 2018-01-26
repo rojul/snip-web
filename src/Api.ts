@@ -27,10 +27,12 @@ export default class Api {
     return ndjson(response.body).getReader();
   }
 
-  static async _fetch(input, init) {
+  static async _fetch(input, init): Promise<any> {
     const response = await fetch(apiUrl + input, init)
-      .catch(err => this._throwWithMsg(err, 'Network Error'));
+      .catch(err => this._throwWithMsg(err, 'Network Error')) as Response;
+
     if (!response.ok) {
+      // @ts-ignore
       this._throwWithMsg(...await response.json()
         .then(data => [data, data.error || response.statusText])
         .catch(() => [response, response.statusText]));
@@ -56,7 +58,6 @@ export default class Api {
   }
 
   static _throwWithMsg(err, msg) {
-    /* eslint-disable no-param-reassign */
     err.errorMsg = msg;
     throw err;
   }

@@ -12,7 +12,7 @@
         autocomplete="off"
         type="text"
         spellcheck="false"
-      ></input>
+      >
       <button
         @click="commandInput(snippet.language.command)"
         :disabled="snippet.command === snippet.language.command"
@@ -40,42 +40,43 @@
   </div>
 </template>
 
-<script>
-import Snippet from '@/Snippet';
-import Language from '@/Language';
-import LanguageList from '@/components/LanguageList';
+<script lang="ts">
+import { Component, Prop, Vue } from 'vue-property-decorator';
 
-export default {
-  name: 'config',
+import Language from '../Language';
+import Snippet from '../Snippet';
+import LanguageList from './LanguageList.vue';
+
+@Component({
   components: {
     LanguageList,
-  },
-  props: {
-    snippet: {
-      type: Snippet,
-      required: true,
-    },
   },
   data() {
     return {
       view: undefined,
     };
   },
-  methods: {
-    commandInput(val) {
-      this.$emit('commandInput', val);
-    },
-    async changeLanguage(id) {
-      const l = await Language.loadLanguage(id).catch((err) => {
-        console.log('Error:', err);
-      });
-      if (!l) {
-        return;
-      }
-      this.$emit('languageChange', l);
-    },
-  },
-};
+})
+export default class Config extends Vue {
+  @Prop({ type: Snippet, required: true })
+  snippet: Snippet;
+
+  view?: string;
+
+  commandInput(val) {
+    this.$emit('commandInput', val);
+  }
+
+  async changeLanguage(id) {
+    const l = await Language.loadLanguage(id).catch(err => {
+      console.log('Error:', err);
+    });
+    if (!l) {
+      return;
+    }
+    this.$emit('languageChange', l);
+  }
+}
 </script>
 
 <style scoped>

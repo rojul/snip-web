@@ -1,9 +1,17 @@
-import Api from '@/Api';
-import Language from '@/Language';
+import Api from './Api';
+import Language from './Language';
 
 let uidCouter = 0;
 
 export default class Snippet {
+  language;
+  files: any[];
+  private rowCommand: string;
+  stdin: string;
+  id: string;
+  created: number;
+  modified: number;
+
   constructor(l, s) {
     this.language = l;
     this.files = s.files;
@@ -14,11 +22,11 @@ export default class Snippet {
   }
 
   get command() {
-    return this._command !== undefined ? this._command : this.language.command;
+    return this.rowCommand !== undefined ? this.rowCommand : this.language.command;
   }
 
   set command(v) {
-    this._command = v === this.language.command ? undefined : v;
+    this.rowCommand = v === this.language.command ? undefined : v;
   }
 
   assignSnippetProps(s) {
@@ -33,9 +41,8 @@ export default class Snippet {
   }
 
   assignUids() {
-    this.files.forEach((f) => {
+    this.files.forEach(f => {
       if (!f.uid) {
-        /* eslint-disable no-param-reassign */
         f.uid = Snippet.getUid();
       }
     });
@@ -86,7 +93,7 @@ export default class Snippet {
         name: file.name,
         content: rmDefaults(file.content),
       })),
-      command: rmDefaults(this._command),
+      command: rmDefaults(this.rowCommand),
       stdin: rmDefaults(this.stdin),
     };
   }
@@ -95,7 +102,7 @@ export default class Snippet {
     if (this.id) {
       return Promise.reject({ errorMsg: 'Updating a snippet is currently not possible' });
     }
-    return Api.createSnippet(this.getRep()).then((snippet) => {
+    return Api.createSnippet(this.getRep()).then(snippet => {
       this.assignSnippetProps(snippet);
     });
   }
@@ -107,7 +114,7 @@ export default class Snippet {
   }
 
   async run() {
-    return Api.runSnippet(this.getRep()).catch((err) => {
+    return Api.runSnippet(this.getRep()).catch(err => {
       let error = 'Can\'t run snippet';
       if (err.errorMsg) {
         error += `: ${err.errorMsg}`;

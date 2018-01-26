@@ -1,6 +1,8 @@
-import Api from '@/Api';
+import Api from './Api';
 
 export default class Language {
+  helloWorld;
+
   constructor(l) {
     Object.assign(this, l);
   }

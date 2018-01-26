@@ -38,17 +38,18 @@
   </div>
 </template>
 
-<script>
-import Config from '@/components/Config';
-import RunOutput from '@/components/RunOutput';
-import Statusbar from '@/components/Statusbar';
-import Tab from '@/components/Tab';
-import Tabs from '@/components/Tabs';
-import TextareaEditor from '@/components/TextareaEditor';
-import Snippet from '@/Snippet';
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
 
-export default {
-  name: 'run',
+import Snippet from '../Snippet';
+import Config from './Config.vue';
+import RunOutput from './RunOutput.vue';
+import Statusbar from './Statusbar.vue';
+import Tab from './Tab.vue';
+import Tabs from './Tabs.vue';
+import TextareaEditor from './TextareaEditor.vue';
+
+@Component({
   components: {
     Config,
     RunOutput,
@@ -62,128 +63,18 @@ export default {
       snippet: undefined,
       output: undefined,
       selectedTab: undefined,
-      state: 'loading',
       errorMsg: undefined,
-      isRunning: false,
     };
   },
-  computed: {
-    status() {
-      const space = { space: true };
-      if (this.state === 'loading') {
-        return [{ text: 'Loading...' }];
-      }
-      if (this.state) {
-        return [];
-      }
-      return [space, { text: this.snippet.language.name }];
-    },
-    title() {
-      if (!this.snippet) {
-        return undefined;
-      }
-      return `${this.snippet.language.name} Snippet`;
-    },
-  },
-  methods: {
-    changeLanguage(l) {
-      this.snippet.language = l;
-      if (this.$route.name === 'LanguageRun') {
-        this.$router.replace({ name: 'LanguageRun', params: { id: this.snippet.language.id } });
-      }
-    },
-    saveSnippet() {
-      this.errorMsg = undefined;
-      this.snippet.save().then(() => {
-        this.$router.replace({ name: 'SnippetRun', params: { id: this.snippet.id } });
-      }).catch((err) => {
-        this.handleError(err, 'Can\'t save snippet');
-      });
-    },
-    cloneSnippet() {
-      this.errorMsg = undefined;
-      this.snippet.clone();
-      this.$router.push({ name: 'LanguageRun', params: { id: this.snippet.language.id } });
-    },
-    renameFile() {
-      this.errorMsg = undefined;
-      const file = this.snippet.files.find(f => f.uid === this.selectedTab);
-      if (!file) {
-        return;
-      }
-      /* eslint-disable no-alert */
-      const nn = prompt(`Rename ${file.name}:`, file.name);
-      if (typeof nn === 'string' && nn !== '') {
-        file.name = nn;
-      }
-    },
-    removeFile() {
-      this.errorMsg = undefined;
-      const selectedTab = this.snippet.removeFile(this.selectedTab);
-      if (!selectedTab) {
-        return;
-      }
-      this.selectedTab = selectedTab;
-    },
-    createFile() {
-      this.errorMsg = undefined;
-      const uid = this.snippet.createFile();
-      if (!uid) {
-        return;
-      }
-      this.$nextTick(() => {
-        this.selectedTab = uid;
-      });
-    },
-    canRun() {
-      return !this.isRunning && !this.snippet.language.notRunnable;
-    },
-    async run() {
-      if (!this.canRun()) {
-        return;
-      }
-      this.isRunning = true;
-      this.errorMsg = undefined;
-      this.output = { info: 'Running...', events: [] };
-      const reader = await this.snippet.run();
-      /* eslint-disable no-await-in-loop */
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) {
-          this.output.info = undefined;
-          this.isRunning = false;
-          return;
-        }
-        if (value.type) {
-          this.output.events.push(value);
-        } else {
-          this.output.events.push(...(value.events || []));
-          this.output.error = value.error;
-          this.output.exitCode = value.exitCode;
-        }
-      }
-    },
-    handleError(err, msg) {
-      this.errorMsg = msg;
-      if (err.errorMsg) {
-        this.errorMsg += `: ${err.errorMsg}`;
-      }
-      console.log(`${this.errorMsg}:`, err);
-    },
-    onKeydown(e) {
-      if (!e.ctrlKey && !e.metaKey) {
-        return;
-      }
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        this.run();
-      }
-      if (e.key === 's') {
-        e.preventDefault();
-        this.saveSnippet();
-      }
-    },
-  },
+})
+export default class Run extends Vue {
+  state = 'loading';
+  isRunning = false;
+  snippet?: Snippet;
+  output;
+  selectedTab;
+  errorMsg?: string;
+
   async created() {
     this.state = 'loading';
     this.errorMsg = undefined;
@@ -193,24 +84,149 @@ export default {
     } else {
       p = Snippet.loadLanguage(this.$route.params.id);
     }
-    p.then((s) => {
+    p.then(s => {
       this.state = undefined;
       this.snippet = s;
-    }).catch((err) => {
+    }).catch(err => {
       this.state = 'error';
       const type = this.$route.name === 'SnippetRun' ? 'snippet' : 'language';
       this.handleError(err, `Can't load ${type}`);
     });
-  },
+  }
+
   mounted() {
     document.addEventListener('keydown', this.onKeydown);
     document.body.style.overflow = 'hidden';
-  },
+  }
+
   beforeDestroy() {
     document.removeEventListener('keydown', this.onKeydown);
     document.body.style.overflow = '';
-  },
-};
+  }
+
+  get status() {
+    const space = { space: true };
+    if (this.state === 'loading') {
+      return [{ text: 'Loading...' }];
+    }
+    if (this.state) {
+      return [];
+    }
+    return [space, { text: this.snippet.language.name }];
+  }
+
+  get title() {
+    if (!this.snippet) {
+      return undefined;
+    }
+    return `${this.snippet.language.name} Snippet`;
+  }
+
+  changeLanguage(l) {
+    this.snippet.language = l;
+    if (this.$route.name === 'LanguageRun') {
+      this.$router.replace({ name: 'LanguageRun', params: { id: this.snippet.language.id } });
+    }
+  }
+
+  saveSnippet() {
+    this.errorMsg = undefined;
+    this.snippet.save().then(() => {
+      this.$router.replace({ name: 'SnippetRun', params: { id: this.snippet.id } });
+    }).catch(err => {
+      this.handleError(err, 'Can\'t save snippet');
+    });
+  }
+
+  cloneSnippet() {
+    this.errorMsg = undefined;
+    this.snippet.clone();
+    this.$router.push({ name: 'LanguageRun', params: { id: this.snippet.language.id } });
+  }
+
+  renameFile() {
+    this.errorMsg = undefined;
+    const file = this.snippet.files.find(f => f.uid === this.selectedTab);
+    if (!file) {
+      return;
+    }
+    const nn = prompt(`Rename ${file.name}:`, file.name);
+    if (typeof nn === 'string' && nn !== '') {
+      file.name = nn;
+    }
+  }
+
+  removeFile() {
+    this.errorMsg = undefined;
+    const selectedTab = this.snippet.removeFile(this.selectedTab);
+    if (!selectedTab) {
+      return;
+    }
+    this.selectedTab = selectedTab;
+  }
+
+  createFile() {
+    this.errorMsg = undefined;
+    const uid = this.snippet.createFile();
+    if (!uid) {
+      return;
+    }
+    this.$nextTick(() => {
+      this.selectedTab = uid;
+    });
+  }
+
+  canRun() {
+    return !this.isRunning && !this.snippet.language.notRunnable;
+  }
+
+  async run() {
+    if (!this.canRun()) {
+      return;
+    }
+    this.isRunning = true;
+    this.errorMsg = undefined;
+    this.output = { info: 'Running...', events: [] };
+    const reader = await this.snippet.run();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        this.output.info = undefined;
+        this.isRunning = false;
+        return;
+      }
+      if (value.type) {
+        this.output.events.push(value);
+      } else {
+        this.output.events.push(...(value.events || []));
+        this.output.error = value.error;
+        this.output.exitCode = value.exitCode;
+      }
+    }
+  }
+
+  handleError(err, msg) {
+    this.errorMsg = msg;
+    if (err.errorMsg) {
+      this.errorMsg += `: ${err.errorMsg}`;
+    }
+    console.log(`${this.errorMsg}:`, err);
+  }
+
+  onKeydown(e) {
+    if (!e.ctrlKey && !e.metaKey) {
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      this.run();
+    }
+    if (e.key === 's') {
+      e.preventDefault();
+      this.saveSnippet();
+    }
+  }
+}
 </script>
 
 <style scoped>

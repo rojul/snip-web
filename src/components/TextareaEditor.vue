@@ -7,21 +7,18 @@
   ></textarea>
 </template>
 
-<script>
-export default {
-  name: 'textarea-editor',
-  props: {
-    value: {
-      type: String,
-      required: true,
-    },
-  },
-  methods: {
-    update(value) {
-      this.$emit('input', value);
-    },
-  },
-};
+<script lang="ts">
+import { Component, Prop, Vue } from 'vue-property-decorator';
+
+@Component
+export default class TextareaEditor extends Vue {
+  @Prop({ type: String, required: true })
+  value: string;
+
+  update(value) {
+    this.$emit('input', value);
+  }
+}
 </script>
 
 <style scoped>

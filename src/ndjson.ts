@@ -1,10 +1,11 @@
-export default function (stream) {
+export default function(stream: ReadableStream) {
+  // @ts-ignore
   return new ReadableStream({
     async start(controller) {
       const reader = stream.getReader();
+      // @ts-ignore
       const decoder = new TextDecoder();
       let buf = '';
-      /* eslint-disable no-await-in-loop */
       for (;;) {
         const { done, value } = await reader.read();
         let lines;
@@ -15,8 +16,8 @@ export default function (stream) {
           lines = buf.split('\n');
           buf = lines.pop();
         }
-        for (let i = 0; i < lines.length; i += 1) {
-          const l = lines[i].trim();
+        for (const line of lines) {
+          const l = line.trim();
           if (l !== '') {
             try {
               controller.enqueue(JSON.parse(l));
