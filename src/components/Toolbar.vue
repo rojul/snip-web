@@ -6,29 +6,27 @@
   </nav>
 </template>
 
-<script>
-export default {
-  name: 'toolbar',
-  props: {
-    title: String,
-  },
-  data() {
-    return {};
-  },
-  methods: {
-    updateTitle() {
-      document.title = `${this.title ? `${this.title} - ` : ''}Snip`;
-    },
-  },
+<script lang="ts">
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+
+@Component
+export default class Toolbar extends Vue {
+  @Prop(String)
+  title?: string;
+
   created() {
     this.updateTitle();
-  },
-  watch: {
-    title() {
-      this.updateTitle();
-    },
-  },
-};
+  }
+
+  updateTitle() {
+    document.title = `${this.title ? `${this.title} - ` : ''}Snip`;
+  }
+
+  @Watch('title')
+  onTitleChanged() {
+    this.updateTitle();
+  }
+}
 </script>
 
 <style scoped>

@@ -9,18 +9,18 @@
   </div>
 </template>
 
-<script>
-import LanguageList from '@/components/LanguageList';
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
 
-export default {
-  name: 'home',
+import LanguageList from './LanguageList.vue';
+
+@Component({
   components: {
     LanguageList,
   },
-  data() {
-    return {};
-  },
-};
+})
+export default class Home extends Vue {
+}
 </script>
 
 <style scoped>

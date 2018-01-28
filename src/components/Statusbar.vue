@@ -1,19 +1,21 @@
 <template>
   <footer>
     <div
-      v-for="s in status"
+      v-for="(s, i) in status"
+      :key="i"
       :class="{ space: s.space }"
     >{{ s.text }}</div>
   </footer>
 </template>
 
-<script>
-export default {
-  name: 'statusbar',
-  props: {
-    status: Array,
-  },
-};
+<script lang="ts">
+import { Component, Prop, Vue } from 'vue-property-decorator';
+
+@Component
+export default class Statusbar extends Vue {
+  @Prop(Array)
+  status: Array<{ text: string } | { space: boolean }>;
+}
 </script>
 
 <style scoped>

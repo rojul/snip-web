@@ -5,10 +5,12 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'page-not-found',
-};
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
+
+@Component
+export default class PageNotFound extends Vue {
+}
 </script>
 
 <style scoped>

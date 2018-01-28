@@ -15,7 +15,7 @@
         v-model="searchValue"
         @keyup.enter="onSearchEnter"
         ref="search"
-      ></input>
+      >
       <router-link
         class="button"
         tabindex="0"
@@ -37,74 +37,85 @@
     </div>
 </template>
 
-<script>
-import Api from '@/Api';
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
 
-export default {
-  name: 'language-list',
-  props: {
-    opennn: {
-      type: Boolean,
-      default: true,
-    },
-  },
+import Api from '../Api';
+
+interface ILanguage {
+  id: string;
+  name: string;
+  extension: string;
+}
+
+@Component({
   data() {
     return {
-      rawLanguages: [],
-      searchValue: '',
-      state: 'loading',
       errorMsg: undefined,
     };
   },
-  computed: {
-    languages() {
-      const t = s => s.replace(/\s+/g, '').toLowerCase();
-      const s = t(this.searchValue);
-      return this.rawLanguages.filter(l =>
-        [l.id, l.name, l.extension].some(e => t(e).includes(s)));
-    },
-  },
-  methods: {
-    onSearchEnter() {
-      if (this.languages.length < 1 || this.rawLanguages.length === this.languages.length) {
-        return;
-      }
-      if (this.$listeners.click) {
-        this.onLanguagesClick(this.languages[0]);
-        return;
-      }
-      this.$router.push(`/languages/${this.languages[0].id}`);
-    },
-    loadLanguages() {
-      this.errorMsg = undefined;
-      this.state = 'loading';
-      this.rawLanguages = [];
-      Api.getLanguages().then((res) => {
-        this.state = undefined;
-        this.rawLanguages = res.languages;
-      }).catch((err) => {
-        this.state = 'error';
-        this.handleError(err, 'Can\'t load languages');
-      });
-    },
-    handleError(err, msg) {
-      this.errorMsg = msg;
-      if (err.errorMsg) {
-        this.errorMsg += `: ${err.errorMsg}`;
-      }
-      console.log(`${this.errorMsg}:`, err);
-    },
-    onLanguagesClick(l) {
-      this.$emit('click', l.id);
-    },
-  },
+})
+export default class LanguageList extends Vue {
+  rawLanguages: ILanguage[] = [];
+  searchValue = '';
+  state?: string = 'loading';
+  errorMsg?: string;
+
+  $refs: {
+    search: HTMLElement,
+  };
+
   created() {
     this.loadLanguages();
-  },
+  }
+
   mounted() {
     this.$refs.search.focus();
-  },
-};
+  }
+
+  get languages() {
+    const t = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+    const v = t(this.searchValue);
+    return this.rawLanguages.filter(l =>
+      [l.id, l.name, l.extension].some(e => t(e).includes(v)));
+  }
+
+  onSearchEnter() {
+    if (this.languages.length < 1 || this.rawLanguages.length === this.languages.length) {
+      return;
+    }
+    if (this.$listeners.click) {
+      this.onLanguagesClick(this.languages[0]);
+      return;
+    }
+    this.$router.push(`/languages/${this.languages[0].id}`);
+  }
+
+  loadLanguages() {
+    this.errorMsg = undefined;
+    this.state = 'loading';
+    this.rawLanguages = [];
+    Api.getLanguages().then(res => {
+      this.state = undefined;
+      this.rawLanguages = res.languages;
+    }).catch(err => {
+      this.state = 'error';
+      this.handleError(err, 'Can\'t load languages');
+    });
+  }
+
+  handleError(err: any, msg: string) {
+    this.errorMsg = msg;
+    if (err.message) {
+      this.errorMsg += `: ${err.message}`;
+    }
+    console.log(`${this.errorMsg}:`, err);
+  }
+
+  onLanguagesClick(l: ILanguage) {
+    this.$emit('click', l.id);
+  }
+}
 </script>
 
 <style scoped>
@@ -133,7 +144,7 @@ input {
   padding: 1rem;
   transition: background .2s;
   cursor: pointer;
-  
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
