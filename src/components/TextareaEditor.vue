@@ -15,7 +15,7 @@ export default class TextareaEditor extends Vue {
   @Prop({ type: String, required: true })
   value: string;
 
-  update(value) {
+  update(value: string) {
     this.$emit('input', value);
   }
 }

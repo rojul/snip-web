@@ -11,22 +11,26 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 
+import { RunResult } from '../RunResult';
+
 @Component
 export default class RunOutput extends Vue {
   @Prop({
     type: Object,
     required: true,
-    default: () => ({ info: 'Press "Run" to run the code' }),
   })
-  output;
+  output: RunResult;
 
   get os() {
-    const os = [];
+    const os: Array<{ text: string, class?: string }> = [];
     const spacer = () => {
       if (os.length !== 0) {
         os.push({ text: '\n' });
       }
     };
+    if (!this.output) {
+      return;
+    }
     if (this.output.events) {
       os.push(...this.output.events.map(e => ({
         text: e.message,

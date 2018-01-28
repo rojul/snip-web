@@ -42,6 +42,12 @@ import { Component, Vue } from 'vue-property-decorator';
 
 import Api from '../Api';
 
+interface ILanguage {
+  id: string;
+  name: string;
+  extension: string;
+}
+
 @Component({
   data() {
     return {
@@ -50,7 +56,7 @@ import Api from '../Api';
   },
 })
 export default class LanguageList extends Vue {
-  rawLanguages = [];
+  rawLanguages: ILanguage[] = [];
   searchValue = '';
   state?: string = 'loading';
   errorMsg?: string;
@@ -68,7 +74,7 @@ export default class LanguageList extends Vue {
   }
 
   get languages() {
-    const t = s => s.replace(/\s+/g, '').toLowerCase();
+    const t = (s: string) => s.replace(/\s+/g, '').toLowerCase();
     const v = t(this.searchValue);
     return this.rawLanguages.filter(l =>
       [l.id, l.name, l.extension].some(e => t(e).includes(v)));
@@ -98,15 +104,15 @@ export default class LanguageList extends Vue {
     });
   }
 
-  handleError(err, msg) {
+  handleError(err: any, msg: string) {
     this.errorMsg = msg;
-    if (err.errorMsg) {
-      this.errorMsg += `: ${err.errorMsg}`;
+    if (err.message) {
+      this.errorMsg += `: ${err.message}`;
     }
     console.log(`${this.errorMsg}:`, err);
   }
 
-  onLanguagesClick(l) {
+  onLanguagesClick(l: ILanguage) {
     this.$emit('click', l.id);
   }
 }

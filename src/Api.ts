@@ -1,64 +1,77 @@
 import ndjson from './ndjson';
+import ResponseError from './ResponseError';
 
 const apiUrl = '/api/';
 
 export default class Api {
   static async getLanguages() {
-    return this._getJSON('languages');
+    return this.getJSON('languages');
   }
 
-  static async getLanguage(id) {
-    return this._getJSON(`languages/${id}`);
+  static async getLanguage(id: string) {
+    return this.getJSON(`languages/${id}`);
   }
 
-  static async getSnippet(id) {
-    return this._getJSON(`snippets/${id}`);
+  static async getSnippet(id: string) {
+    return this.getJSON(`snippets/${id}`);
   }
 
-  static async createSnippet(payload) {
-    return this._postJSON('snippets', payload);
+  static async createSnippet(payload: object) {
+    return this.postJSON('snippets', payload);
   }
 
-  static async runSnippet(payload) {
-    const response = await this._fetch('run', {
+  static async runSnippet(payload: object) {
+    const response = await this.fetch('run', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-    return ndjson(response.body).getReader();
+    return ndjson(response.body!).getReader();
   }
 
-  static async _fetch(input, init): Promise<any> {
-    const response = await fetch(apiUrl + input, init)
-      .catch(err => this._throwWithMsg(err, 'Network Error')) as Response;
+  private static async fetch(input: string, init: RequestInit) {
+    let response: Response;
+    try {
+      response = await fetch(apiUrl + input, init);
+    } catch (e) {
+      e.originalError = e.message;
+      e.message = 'Network Error';
+      throw e;
+    }
 
     if (!response.ok) {
-      // @ts-ignore
-      this._throwWithMsg(...await response.json()
-        .then(data => [data, data.error || response.statusText])
-        .catch(() => [response, response.statusText]));
+      let err;
+      try {
+        const data = await response.json();
+        err = new ResponseError(response, data);
+      } catch (e) {
+        err = new Error(response.statusText);
+        err.name = 'InvalidResponse';
+      }
+      throw err;
     }
     return response;
   }
 
-  static async _fetchJSON(input, init) {
-    const response = await this._fetch(input, init);
-    return response.json()
-      .catch(err => this._throwWithMsg(err, 'Invalid Response'));
+  private static async fetchJSON(input: string, init: RequestInit) {
+    const response = await this.fetch(input, init);
+    try {
+      return response.json();
+    } catch (e) {
+      e.originalError = e.message;
+      e.message = 'Invalid Response';
+      e.response = response;
+      throw e;
+    }
   }
 
-  static async _getJSON(url) {
-    return this._fetchJSON(url, {});
+  private static async getJSON(url: string) {
+    return this.fetchJSON(url, {});
   }
 
-  static async _postJSON(url, obj) {
-    return this._fetchJSON(url, {
+  private static async postJSON(url: string, obj: object) {
+    return this.fetchJSON(url, {
       method: 'POST',
       body: JSON.stringify(obj),
     });
-  }
-
-  static _throwWithMsg(err, msg) {
-    err.errorMsg = msg;
-    throw err;
   }
 }

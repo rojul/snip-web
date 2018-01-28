@@ -1,67 +1,48 @@
 import Api from './Api';
+import File from './File';
 import Language from './Language';
 
-let uidCouter = 0;
-
 export default class Snippet {
-  language;
-  files: any[];
-  private rowCommand: string;
+  id?: string;
+  language: Language;
+  files: File[];
   stdin: string;
-  id: string;
-  created: number;
-  modified: number;
+  created?: number;
+  modified?: number;
+  private rawCommand?: string;
 
-  constructor(l, s) {
+  constructor(l: Language, s: any) {
     this.language = l;
-    this.files = s.files;
-    this.assignUids();
+    this.files = s.files.map((f: any) => new File(f));
     this.command = s.command;
     this.stdin = s.stdin || '';
     this.assignSnippetProps(s);
   }
 
   get command() {
-    return this.rowCommand !== undefined ? this.rowCommand : this.language.command;
+    return this.rawCommand !== undefined ? this.rawCommand : this.language.command;
   }
 
   set command(v) {
-    this.rowCommand = v === this.language.command ? undefined : v;
+    this.rawCommand = v === this.language.command ? undefined : v;
   }
 
-  assignSnippetProps(s) {
+  private assignSnippetProps(s: any) {
     this.id = s.id;
     this.created = s.created;
     this.modified = s.modified;
-  }
-
-  static getUid() {
-    uidCouter += 1;
-    return uidCouter;
-  }
-
-  assignUids() {
-    this.files.forEach(f => {
-      if (!f.uid) {
-        f.uid = Snippet.getUid();
-      }
-    });
   }
 
   createFile() {
     if (this.files.length >= 20) {
       return undefined;
     }
-    const uid = Snippet.getUid();
-    this.files.push({
-      name: this.getUnusedFilename(),
-      content: '',
-      uid,
-    });
-    return uid;
+    const file = new File({ name: this.getUnusedFilename() });
+    this.files.push(file);
+    return file.uid;
   }
 
-  removeFile(uid) {
+  removeFile(uid: number) {
     if (this.files.length < 2) {
       return undefined;
     }
@@ -75,7 +56,7 @@ export default class Snippet {
   }
 
   getUnusedFilename() {
-    const t = j => `untitled${j + 1}.${this.language.extension}`;
+    const t = (j: number) => `untitled${j + 1}.${this.language.extension}`;
     for (let i = 0; ; i += 1) {
       const n = this.files.find(f => f.name === t(i));
       if (!n) {
@@ -85,7 +66,7 @@ export default class Snippet {
   }
 
   getRep() {
-    const rmDefaults = (val, ...def) => (['', ...def].includes(val) ? undefined : val);
+    const rmDefaults = (val: string | undefined) => val === '' ? undefined : val;
     return {
       id: this.id,
       language: this.language.id,
@@ -93,18 +74,17 @@ export default class Snippet {
         name: file.name,
         content: rmDefaults(file.content),
       })),
-      command: rmDefaults(this.rowCommand),
+      command: rmDefaults(this.rawCommand),
       stdin: rmDefaults(this.stdin),
     };
   }
 
   async save() {
     if (this.id) {
-      return Promise.reject({ errorMsg: 'Updating a snippet is currently not possible' });
+      throw new Error('Updating a snippet is currently not possible');
     }
-    return Api.createSnippet(this.getRep()).then(snippet => {
-      this.assignSnippetProps(snippet);
-    });
+    const snippet = await Api.createSnippet(this.getRep());
+    return this.assignSnippetProps(snippet);
   }
 
   async clone() {
@@ -114,24 +94,17 @@ export default class Snippet {
   }
 
   async run() {
-    return Api.runSnippet(this.getRep()).catch(err => {
-      let error = 'Can\'t run snippet';
-      if (err.errorMsg) {
-        error += `: ${err.errorMsg}`;
-      }
-      console.log(`${error}:`, err);
-      return { error };
-    });
+    return Api.runSnippet(this.getRep());
   }
 
-  static async loadSnippet(id) {
+  static async loadSnippet(id: string) {
     const s = await Api.getSnippet(id);
     const l = await Language.loadLanguage(s.language);
     return new Snippet(l, s);
   }
 
-  static async loadLanguage(langName) {
-    const l = await Language.loadLanguage(langName);
+  static async loadLanguage(id: string) {
+    const l = await Language.loadLanguage(id);
     return new Snippet(l, l.helloWorld);
   }
 }

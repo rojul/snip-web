@@ -41,6 +41,8 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
+import Language from '../Language';
+import { IRunResultEvent, RunResult } from '../RunResult';
 import Snippet from '../Snippet';
 import Config from './Config.vue';
 import RunOutput from './RunOutput.vue';
@@ -61,18 +63,16 @@ import TextareaEditor from './TextareaEditor.vue';
   data() {
     return {
       snippet: undefined,
-      output: undefined,
       selectedTab: undefined,
       errorMsg: undefined,
     };
   },
 })
 export default class Run extends Vue {
-  state = 'loading';
-  isRunning = false;
+  state?: string = 'loading';
   snippet?: Snippet;
-  output;
-  selectedTab;
+  output = RunResult.helpInfo();
+  selectedTab: number | string;
   errorMsg?: string;
 
   async created() {
@@ -112,7 +112,7 @@ export default class Run extends Vue {
     if (this.state) {
       return [];
     }
-    return [space, { text: this.snippet.language.name }];
+    return [space, { text: this.snippet!.language.name }];
   }
 
   get title() {
@@ -122,17 +122,17 @@ export default class Run extends Vue {
     return `${this.snippet.language.name} Snippet`;
   }
 
-  changeLanguage(l) {
-    this.snippet.language = l;
+  changeLanguage(l: Language) {
+    this.snippet!.language = l;
     if (this.$route.name === 'LanguageRun') {
-      this.$router.replace({ name: 'LanguageRun', params: { id: this.snippet.language.id } });
+      this.$router.replace({ name: 'LanguageRun', params: { id: this.snippet!.language.id } });
     }
   }
 
   saveSnippet() {
     this.errorMsg = undefined;
-    this.snippet.save().then(() => {
-      this.$router.replace({ name: 'SnippetRun', params: { id: this.snippet.id } });
+    this.snippet!.save().then(() => {
+      this.$router.replace({ name: 'SnippetRun', params: { id: this.snippet!.id! } });
     }).catch(err => {
       this.handleError(err, 'Can\'t save snippet');
     });
@@ -140,13 +140,13 @@ export default class Run extends Vue {
 
   cloneSnippet() {
     this.errorMsg = undefined;
-    this.snippet.clone();
-    this.$router.push({ name: 'LanguageRun', params: { id: this.snippet.language.id } });
+    this.snippet!.clone();
+    this.$router.push({ name: 'LanguageRun', params: { id: this.snippet!.language.id } });
   }
 
   renameFile() {
     this.errorMsg = undefined;
-    const file = this.snippet.files.find(f => f.uid === this.selectedTab);
+    const file = this.snippet!.files.find(f => f.uid === this.selectedTab);
     if (!file) {
       return;
     }
@@ -158,7 +158,7 @@ export default class Run extends Vue {
 
   removeFile() {
     this.errorMsg = undefined;
-    const selectedTab = this.snippet.removeFile(this.selectedTab);
+    const selectedTab = this.snippet!.removeFile(this.selectedTab as number);
     if (!selectedTab) {
       return;
     }
@@ -167,7 +167,7 @@ export default class Run extends Vue {
 
   createFile() {
     this.errorMsg = undefined;
-    const uid = this.snippet.createFile();
+    const uid = this.snippet!.createFile();
     if (!uid) {
       return;
     }
@@ -177,43 +177,53 @@ export default class Run extends Vue {
   }
 
   canRun() {
-    return !this.isRunning && !this.snippet.language.notRunnable;
+    return !this.output.isRunning && !this.snippet!.language.notRunnable;
   }
 
   async run() {
     if (!this.canRun()) {
       return;
     }
-    this.isRunning = true;
     this.errorMsg = undefined;
-    this.output = { info: 'Running...', events: [] };
-    const reader = await this.snippet.run();
+    this.output = RunResult.startRunning();
+    let reader: ReadableStreamReader;
+    try {
+      reader = await this.snippet!.run();
+    } catch (e) {
+      this.output.setError('Can\'t run snippet', e);
+      return;
+    }
     for (;;) {
-      const { done, value } = await reader.read();
-      if (done) {
-        this.output.info = undefined;
-        this.isRunning = false;
+      let obj: { done: boolean, value: IRunResultEvent & RunResult };
+      try {
+        obj = await reader.read();
+      } catch (e) {
+        this.output.setError('Can\'t run snippet', e);
         return;
       }
-      if (value.type) {
-        this.output.events.push(value);
+      if (obj.done) {
+        this.output.stopRunning();
+        return;
+      }
+      if (obj.value.type) {
+        this.output.events.push(obj.value);
       } else {
-        this.output.events.push(...(value.events || []));
-        this.output.error = value.error;
-        this.output.exitCode = value.exitCode;
+        this.output.events.push(...(obj.value.events || []));
+        this.output.error = obj.value.error;
+        this.output.exitCode = obj.value.exitCode;
       }
     }
   }
 
-  handleError(err, msg) {
+  handleError(err: any, msg: string) {
     this.errorMsg = msg;
-    if (err.errorMsg) {
-      this.errorMsg += `: ${err.errorMsg}`;
+    if (err.message) {
+      this.errorMsg += `: ${err.message}`;
     }
     console.log(`${this.errorMsg}:`, err);
   }
 
-  onKeydown(e) {
+  onKeydown(e: KeyboardEvent) {
     if (!e.ctrlKey && !e.metaKey) {
       return;
     }

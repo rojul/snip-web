@@ -64,7 +64,7 @@ import Tab from './Tab.vue';
 @Component
 export default class Tabs extends Vue {
   @Prop({ required: true })
-  value;
+  value: number | string;
 
   tabs = this.$children as Tab[];
   split = 70;
@@ -77,7 +77,7 @@ export default class Tabs extends Vue {
     content: HTMLElement,
   };
 
-  click(tab) {
+  click(tab: Tab) {
     if (tab.$listeners.click) {
       tab.$emit('click');
       return;
@@ -85,21 +85,21 @@ export default class Tabs extends Vue {
     this.$emit('input', tab.id);
   }
 
-  dragStart(e) {
+  dragStart(e: MouseEvent & TouchEvent) {
     e.preventDefault();
     this.dragging = true;
     this.startY = e.pageY || e.touches[0].pageY;
     this.startSplit = this.split;
   }
 
-  dragMove(e) {
+  dragMove(e: MouseEvent & TouchEvent) {
     if (!this.dragging) {
       return;
     }
     e.preventDefault();
-    const dy = (e.pageY || e.touches[0].pageY) - this.startY;
+    const dy = (e.pageY || e.touches[0].pageY) - this.startY!;
     const totalHeight = this.$refs.content.offsetHeight;
-    let split = this.startSplit + ((dy / totalHeight) * 100);
+    let split = this.startSplit! + ((dy / totalHeight) * 100);
     split = Math.floor((split) * 1e4) / 1e4;
     this.split = Math.min(Math.max(split, 10), 90);
   }

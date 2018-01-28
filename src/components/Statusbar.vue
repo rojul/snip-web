@@ -14,7 +14,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 @Component
 export default class Statusbar extends Vue {
   @Prop(Array)
-  status: any[];
+  status: Array<{ text: string } | { space: boolean }>;
 }
 </script>
 

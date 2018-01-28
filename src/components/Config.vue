@@ -63,11 +63,11 @@ export default class Config extends Vue {
 
   view?: string;
 
-  commandInput(val) {
+  commandInput(val: string) {
     this.$emit('commandInput', val);
   }
 
-  async changeLanguage(id) {
+  async changeLanguage(id: string) {
     const l = await Language.loadLanguage(id).catch(err => {
       console.log('Error:', err);
     });

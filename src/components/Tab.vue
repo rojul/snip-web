@@ -13,7 +13,7 @@ export default class Tab extends Vue {
   type?: string;
 
   @Prop({ required: true })
-  id;
+  id: number | string;
 
   @Prop({ type: String, required: true })
   name: string;
@@ -42,7 +42,7 @@ export default class Tab extends Vue {
     return this.type === 'button';
   }
 
-  setActive(v) {
+  setActive(v: boolean) {
     this.active = v;
   }
 }
