@@ -42,7 +42,7 @@
 import { Component, Vue } from 'vue-property-decorator';
 
 import Language from '../Language';
-import { IRunResultEvent, RunResult } from '../RunResult';
+import { RunResult } from '../RunResult';
 import Snippet from '../Snippet';
 import Config from './Config.vue';
 import RunOutput from './RunOutput.vue';
@@ -71,7 +71,7 @@ import TextareaEditor from './TextareaEditor.vue';
 export default class Run extends Vue {
   state?: string = 'loading';
   snippet?: Snippet;
-  output = RunResult.helpInfo();
+  output = new RunResult();
   selectedTab: number | string;
   errorMsg?: string;
 
@@ -185,34 +185,8 @@ export default class Run extends Vue {
       return;
     }
     this.errorMsg = undefined;
-    this.output = RunResult.startRunning();
-    let reader: ReadableStreamReader;
-    try {
-      reader = await this.snippet!.run();
-    } catch (e) {
-      this.output.setError('Can\'t run snippet', e);
-      return;
-    }
-    for (;;) {
-      let obj: { done: boolean, value: IRunResultEvent & RunResult };
-      try {
-        obj = await reader.read();
-      } catch (e) {
-        this.output.setError('Can\'t run snippet', e);
-        return;
-      }
-      if (obj.done) {
-        this.output.stopRunning();
-        return;
-      }
-      if (obj.value.type) {
-        this.output.events.push(obj.value);
-      } else {
-        this.output.events.push(...(obj.value.events || []));
-        this.output.error = obj.value.error;
-        this.output.exitCode = obj.value.exitCode;
-      }
-    }
+    this.output = new RunResult();
+    this.output.runSnippet(this.snippet!);
   }
 
   handleError(err: any, msg: string) {
